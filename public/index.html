@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark" data-sidebar="expanded">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#111210">
+    <title>JP Reader</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/app.js" type="module"></script>
+  </head>
+  <body>
+    <div class="app-layout">
+      <aside class="sidebar" aria-label="Navegação principal">
+        <div class="sidebar-top">
+          <a class="brand" href="#meus-textos" aria-label="JP Reader, meus textos">
+            <span class="brand-mark" aria-hidden="true">文</span>
+            <span class="brand-name">JP Reader</span>
+          </a>
+          <button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-label="Recolher menu" title="Recolher menu">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5-7 7 7 7"/></svg>
+          </button>
+        </div>
+
+        <nav class="nav-list">
+          <button class="nav-item is-active" type="button" data-page="meus-textos" aria-current="page" title="Meus textos">
+            <span class="nav-icon" aria-hidden="true">▤</span><span class="nav-label">Meus textos</span>
+          </button>
+          <button class="nav-item" type="button" data-page="palavras" title="Palavras">
+            <span class="nav-icon" aria-hidden="true">あ</span><span class="nav-label">Palavras</span>
+          </button>
+          <button class="nav-item" type="button" data-page="configuracoes" title="Configurações">
+            <span class="nav-icon" aria-hidden="true">⚙</span><span class="nav-label">Configurações</span>
+          </button>
+        </nav>
+      </aside>
+
+      <main class="main-content">
+        <section class="page-section is-visible" id="page-meus-textos" aria-labelledby="title-meus-textos">
+          <div class="content-column">
+            <div id="import-screen">
+              <h1 id="title-meus-textos">Meus textos</h1>
+              <div class="library-toolbar">
+                <p class="import-status" id="library-status" aria-live="polite"></p>
+                <button class="read-button add-text-button" id="add-text-button" type="button" hidden>＋ Adicionar texto</button>
+              </div>
+              <div class="empty-library" id="empty-library">
+                <h2>Ainda não há textos</h2>
+                <p>Adicione um texto em japonês para começar a leitura.</p>
+                <button class="primary-button empty-add-text-button" id="empty-add-text-button" type="button">＋ Adicionar texto</button>
+              </div>
+            </div>
+            <section class="library-list" id="library-list" aria-labelledby="library-title" hidden>
+              <h2 id="library-title">Seus textos</h2>
+              <div id="documents-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <div class="import-modal-overlay" id="import-modal" hidden>
+          <section class="import-modal" role="dialog" aria-modal="true" aria-labelledby="import-modal-title">
+            <header class="import-modal-header">
+              <h2 id="import-modal-title">Adicionar texto</h2>
+              <button class="icon-action" id="close-import-modal" type="button" aria-label="Fechar" title="Fechar">×</button>
+            </header>
+            <form id="import-form">
+              <fieldset class="import-mode-options">
+                <legend>Escolha como adicionar</legend>
+                <label class="import-mode-option"><input type="radio" name="import-mode" value="file" checked><span>Arquivo .txt</span></label>
+                <label class="import-mode-option"><input type="radio" name="import-mode" value="paste"><span>Colar texto</span></label>
+              </fieldset>
+              <div class="import-mode-panel" id="file-import-panel">
+                <label class="drop-zone" id="drop-zone" for="file-input">
+                  <input id="file-input" type="file" accept=".txt,text/plain">
+                  <span class="upload-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14.5v4A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5v-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </span>
+                  <span class="drop-title">Arraste um arquivo ou <span>escolha no computador</span></span>
+                  <span class="file-types">TXT</span>
+                  <span class="selected-file" id="selected-file" aria-live="polite"></span>
+                </label>
+              </div>
+              <div class="import-mode-panel" id="paste-import-panel" hidden>
+                <label class="paste-label" for="paste-text">Texto em japonês</label>
+                <textarea class="paste-textarea" id="paste-text" placeholder="Cole seu texto aqui…" spellcheck="false"></textarea>
+              </div>
+              <p class="import-modal-status" id="import-status" aria-live="polite"></p>
+              <footer class="import-actions">
+                <button class="read-button cancel-import-button" id="cancel-import-button" type="button">Cancelar</button>
+                <button class="primary-button" id="import-button" type="submit" disabled>Importar texto</button>
+              </footer>
+            </form>
+          </section>
+        </div>
+
+        <section class="page-section" id="page-reader" aria-labelledby="reader-title" hidden>
+          <div class="reader-column">
+            <div class="reader-heading">
+              <button class="back-button" id="back-to-library" type="button" aria-label="Voltar aos textos" title="Voltar">←</button>
+              <h1 class="reader-title" id="reader-title"></h1>
+              <button class="icon-action edit-reader-button" id="edit-reader-button" type="button" aria-label="Editar texto" title="Editar texto">✏️</button>
+            </div>
+            <div class="reader-selection-toolbar" id="reader-selection-toolbar" hidden>
+              <span id="reader-selection-count" aria-live="polite"></span>
+              <button class="primary-button" id="join-selected-words" type="button" disabled>Unir</button>
+            </div>
+            <article class="reader-content" id="reader-content"></article>
+            <section class="reader-editor" id="reader-editor" aria-label="Editar texto" hidden>
+              <label class="reader-title-edit-label" for="reader-title-editor">Título</label>
+              <input id="reader-title-editor" class="reader-title-editor" type="text" maxlength="120" autocomplete="off">
+              <textarea id="reader-text-editor" class="reader-text-editor" spellcheck="false" hidden></textarea>
+              <div class="reader-edit-actions">
+                <p class="reader-edit-status" id="reader-edit-status" aria-live="polite"></p>
+                <button class="read-button" id="cancel-reader-edit" type="button">Cancelar</button>
+                <button class="primary-button" id="save-reader-edit" type="button">Salvar alterações</button>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="page-section" id="page-palavras" aria-labelledby="title-palavras" hidden>
+          <div class="content-column">
+            <h1 id="title-palavras">Palavras</h1>
+            <div class="words-overview" id="words-overview" aria-live="polite"></div>
+            <div class="words-toolbar">
+              <label class="words-filter-label" for="words-level-filter">Nível</label>
+              <select class="setting-select words-filter" id="words-level-filter">
+                <option value="all">Todos</option>
+                <option value="1">1 · Nova</option>
+                <option value="2">2 · Reconhecida</option>
+                <option value="3">3 · Familiar</option>
+                <option value="4">4 · Quase aprendida</option>
+                <option value="5">5 · Dominada</option>
+              </select>
+            </div>
+            <p class="words-status" id="words-status" aria-live="polite"></p>
+            <div class="words-list" id="words-list"></div>
+            <div class="words-pagination" id="words-pagination" hidden>
+              <button class="read-button" id="words-previous" type="button">← Anterior</button>
+              <span id="words-page-label"></span>
+              <button class="read-button" id="words-next" type="button">Próxima →</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="page-section" id="page-configuracoes" aria-labelledby="title-configuracoes" hidden>
+          <div class="content-column">
+            <h1 id="title-configuracoes">Configurações</h1>
+            <section class="settings-group" aria-labelledby="general-settings-title">
+              <h2 class="settings-heading" id="general-settings-title">Geral</h2>
+              <div class="setting-row">
+                <span class="setting-name">Tema</span>
+                <div class="theme-switch" role="group" aria-label="Tema">
+                  <button class="theme-option" type="button" data-set-theme="light" aria-label="Tema claro" aria-pressed="false" title="Tema claro">☀️</button>
+                  <button class="theme-option" type="button" data-set-theme="dark" aria-label="Tema escuro" aria-pressed="true" title="Tema escuro">🌙</button>
+                </div>
+              </div>
+            </section>
+            <section class="settings-group" aria-labelledby="reader-settings-title">
+              <h2 class="settings-heading" id="reader-settings-title">Leitor</h2>
+              <div class="setting-row">
+                <label class="setting-name" for="reader-font">Fonte do leitor</label>
+                <select class="setting-select" id="reader-font" aria-label="Fonte do texto em japonês">
+                  <option value="system">Padrão do sistema</option>
+                  <option value="noto-serif-jp">Noto Serif JP</option>
+                  <option value="mplus-rounded">M PLUS Rounded 1c</option>
+                </select>
+              </div>
+              <div class="setting-row reader-size-row">
+                <label class="setting-name" for="reader-text-size">Tamanho do texto</label>
+                <div class="reader-size-control">
+                  <input id="reader-text-size" type="range" min="18" max="36" step="1" value="24" aria-describedby="reader-size-value">
+                  <output id="reader-size-value" for="reader-text-size">24 px</output>
+                </div>
+              </div>
+              <div class="setting-row reader-size-row">
+                <label class="setting-name" for="reader-width">Largura do leitor</label>
+                <div class="reader-size-control">
+                  <input id="reader-width" type="range" min="60" max="80" step="1" value="70" aria-describedby="reader-width-value">
+                  <output id="reader-width-value" for="reader-width">70%</output>
+                </div>
+              </div>
+              <div class="setting-row">
+                <label class="setting-name" for="reader-justify">Justificar texto</label>
+                <input class="setting-checkbox" id="reader-justify" type="checkbox">
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

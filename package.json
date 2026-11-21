@@ -1,0 +1,14 @@
+{
+  "name": "jp-reader",
+  "version": "0.1.0",
+  "private": true,
+  "license": "GPL-3.0-or-later",
+  "description": "Leitor local de japonês com familiaridade por palavra.",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

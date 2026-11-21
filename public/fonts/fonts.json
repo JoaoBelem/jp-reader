@@ -1,0 +1,27 @@
+{
+  "default": "system",
+  "fonts": [
+    {
+      "id": "system",
+      "namePt": "Padrão do sistema",
+      "nameEn": "System default",
+      "family": "inherit"
+    },
+    {
+      "id": "noto-serif-jp",
+      "name": "Noto Serif JP",
+      "family": "Noto Serif JP",
+      "src": "/fonts/NotoSerifJP-VariableFont_wght.ttf",
+      "format": "truetype",
+      "weight": "100 900"
+    },
+    {
+      "id": "mplus-rounded",
+      "name": "M PLUS Rounded 1c",
+      "family": "M PLUS Rounded 1c",
+      "src": "/fonts/MPLUSRounded1c-Regular.ttf",
+      "format": "truetype",
+      "weight": "400"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+.venv/
+.cache/
+__pycache__/
+*.py[cod]
+dict/*.zip
+library/*.txt
+data/word-levels.json
+data/preferred-dictionary-entries.json
+data/word-merges.json
