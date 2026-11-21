@@ -92,7 +92,7 @@ function createWordToken(token) {
   expression.textContent = token.dictionaryForm || token.surface;
   const reading = document.createElement('span');
   reading.className = 'popover-reading';
-  reading.textContent = token.reading || '—';
+  reading.textContent = token.lemmaReading || token.reading || '—';
   wordMeta.append(expression, reading);
 
   const { control, toggle, menu } = createLevelMenu(button.dataset.wordKey);
@@ -170,6 +170,9 @@ function getLookupContext(button) {
       } else if (currentNode.matches('.reader-word')) {
         characters.push(...[...currentNode.textContent].slice(0, 20 - characters.length));
         currentNode = getNextNode(readerContent, currentNode);
+      } else if (currentNode.matches('.word-gap')) {
+        // Space added by the reader between blocks: not a boundary of the text.
+        currentNode = getNextNode(readerContent, currentNode);
       } else if (currentNode.matches('br')) {
         break;
       } else {
@@ -182,7 +185,10 @@ function getLookupContext(button) {
       const text = currentNode.nodeValue ?? '';
       const lineBreak = text.search(/[\r\n]/u);
       const visibleText = lineBreak < 0 ? text : text.slice(0, lineBreak);
-      characters.push(...[...visibleText.replace(/\s+/gu, '')].slice(0, 20 - characters.length));
+      // A space written in the text separates two words: the search stops here so a
+      // compound entry never swallows the neighbour word.
+      if (/\s/u.test(visibleText)) break;
+      characters.push(...[...visibleText].slice(0, 20 - characters.length));
       if (lineBreak >= 0) break;
     }
     currentNode = getNextNode(readerContent, currentNode);
@@ -347,7 +353,11 @@ async function openWordPopover(wrapper, button, popover, meaning, token) {
       return;
     }
     const reading = popover.querySelector('.popover-reading');
-    if (result.reading) reading.textContent = toHiragana(result.reading);
+    // Prefer the lemma reading: the dictionary reading of the first matching entry
+    // can belong to another word, and the token reading is the inflected form.
+    const lemmaReading = result.lemmaReading ? toHiragana(result.lemmaReading) : '';
+    if (lemmaReading) reading.textContent = lemmaReading;
+    else if (result.reading) reading.textContent = toHiragana(result.reading);
     renderLookupResults(meaning, result, token);
     positionWordPopover(wrapper, button, popover);
   } catch (error) {

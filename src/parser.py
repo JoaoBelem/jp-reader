@@ -227,7 +227,7 @@ def load_dictionary_index():
 
 def lookup_word(term: str, surface: str, reading: str = "", candidates: list[dict] | None = None, preferred_entry: dict | None = None) -> dict:
     if dictionary_database is None or not dictionary_titles:
-        return {"available": False, "found": False, "reading": None, "entries": [], "senses": [], "dictionaries": []}
+        return {"available": False, "found": False, "reading": None, "lemmaReading": lemma_reading_form(term), "entries": [], "senses": [], "dictionaries": []}
     rows = []
     seen_rows = set()
     if isinstance(preferred_entry, dict) and all(isinstance(preferred_entry.get(key), str) for key in ("dictionary", "expression", "reading")):
@@ -298,6 +298,7 @@ def lookup_word(term: str, surface: str, reading: str = "", candidates: list[dic
         "available": True,
         "found": bool(entries),
         "reading": selected_reading,
+        "lemmaReading": lemma_reading_form(term),
         "entries": entries,
         "senses": senses[:10],
         "dictionaries": selected_dictionaries,
@@ -306,6 +307,31 @@ def lookup_word(term: str, surface: str, reading: str = "", candidates: list[dic
 
 def to_hiragana(text: str) -> str:
     return "".join(chr(ord(char) - 0x60) if "ァ" <= char <= "ヶ" else char for char in text)
+
+
+lemma_reading_cache = {}
+
+
+def lemma_reading_form(form: str) -> str:
+    """Reading of the dictionary form itself, so the reader can show the lemma reading.
+
+    The surface reading of an inflected word (よんだ) differs from the reading of its
+    lemma (よむ), and dictionary entries are not a reliable source because the first
+    match can be another word that happens to share the written form.
+    """
+    if not form:
+        return ""
+    cached = lemma_reading_cache.get(form)
+    if cached is not None:
+        return cached
+    # The dictionary form may itself split into several morphemes (e.g. 図書館).
+    reading = "".join(
+        morpheme.reading_form() or morpheme.surface()
+        for morpheme in tokenizer.tokenize(form, SplitMode.A)
+    )
+    normalized = to_hiragana(reading)
+    lemma_reading_cache[form] = normalized
+    return normalized
 
 
 def tokenize_text(text: str, custom_merges: list[dict] | None = None) -> dict:
@@ -321,7 +347,12 @@ def tokenize_text(text: str, custom_merges: list[dict] | None = None) -> dict:
                 "partOfSpeech": morpheme.part_of_speech()[0],
             }
         )
-    return {"tokens": apply_custom_merges(merge_inflections(tokens), custom_merges)}
+    merged = apply_custom_merges(merge_inflections(tokens), custom_merges)
+    # The lemma reading is resolved only after the merges, since a merged token
+    # carries its own dictionary form.
+    for token in merged:
+        token["lemmaReading"] = lemma_reading_form(token["dictionaryForm"])
+    return {"tokens": merged}
 
 
 def main() -> None:

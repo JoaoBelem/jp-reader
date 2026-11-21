@@ -33,6 +33,14 @@ function isPunctuation(token) {
   return token.partOfSpeech === '補助記号';
 }
 
+/** Space inserted by the reader between two blocks; the original text had none there. */
+function createWordGap() {
+  const gap = document.createElement('span');
+  gap.className = 'word-gap';
+  gap.textContent = ' ';
+  return gap;
+}
+
 function renderTokens(tokens) {
   const fragment = document.createDocumentFragment();
   let previousType = 'start';
@@ -40,13 +48,15 @@ function renderTokens(tokens) {
 
   for (const token of tokens) {
     if (isWhitespace(token) || isPunctuation(token)) {
+      // A whitespace token is a space written in the original text: it stays a plain
+      // text node so the dictionary search treats it as a word boundary.
       fragment.append(document.createTextNode(token.surface));
       previousType = isWhitespace(token) ? 'space' : 'punctuation';
       continue;
     }
 
     if (previousType === 'word' || previousType === 'punctuation') {
-      fragment.append(document.createTextNode(' '));
+      fragment.append(createWordGap());
     }
     if (isNumberOnly(token.surface)) {
       fragment.append(document.createTextNode(token.surface));

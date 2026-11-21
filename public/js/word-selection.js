@@ -83,12 +83,17 @@ function selectionIsContiguous() {
   for (let index = 0; index < wrappers.length - 1; index++) {
     let node = wrappers[index].nextSibling;
     while (node && node !== wrappers[index + 1]) {
-      if (node.nodeType !== Node.TEXT_NODE || node.textContent.trim()) return false;
+      if (!isWordSeparator(node)) return false;
       node = node.nextSibling;
     }
     if (node !== wrappers[index + 1]) return false;
   }
   return true;
+}
+
+function isWordSeparator(node) {
+  if (node.nodeType === Node.ELEMENT_NODE && node.matches('.word-gap')) return true;
+  return node.nodeType === Node.TEXT_NODE && !node.textContent.trim();
 }
 
 function replaceSelectedWordsWithCombinedToken(parts) {

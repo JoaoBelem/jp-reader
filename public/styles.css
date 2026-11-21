@@ -68,15 +68,16 @@
   --accent-contrast: #fffefa;
   --focus: #486451;
   --shadow: 0 16px 48px rgb(38 42 33 / 7%);
+  --level-0-border: #4086c0;
   --level-0-bg: #cfe4ff;
   --level-0-text: #12375d;
-  --level-1-bg: #ffd54f;
+  --level-1-bg: #f8db7d;
   --level-1-text: #30260b;
-  --level-2-bg: #f3b46f;
+  --level-2-bg: #f0c18e;  
   --level-2-text: #39230e;
-  --level-3-bg: #98c9e2;
+  --level-3-bg: #d8f7da;
   --level-3-text: #17384b;
-  --level-4-bg: rgb(83 158 199 / 12%);
+  --level-4-bg: rgba(74, 198, 207, 0.116);
 }
 
 /* 3. Base ----------------------------------------------------------------- */
@@ -1028,7 +1029,8 @@ h1 {
 }
 
 .reader-word.level-0 {
-  border-color: var(--level-0-bg);
+  border: 2px solid;
+  border-color: var(--level-0-border);
   background: var(--level-0-bg);
   color: var(--level-0-text);
 }
