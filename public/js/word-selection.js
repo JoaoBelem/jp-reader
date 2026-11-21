@@ -1,4 +1,5 @@
 import { state } from './state.js';
+import { closestBoxIndex } from './helpers.js';
 import { createCachedWordToken, hydrateCachedWords } from './dictionary-search.js';
 import { cacheLibraryWordKeys } from './library.js';
 
@@ -6,54 +7,70 @@ const readerContent = document.querySelector('#reader-content');
 const selectionToolbar = document.querySelector('#reader-selection-toolbar');
 const selectionCount = document.querySelector('#reader-selection-count');
 const joinSelectedWords = document.querySelector('#join-selected-words');
-const selectionOutline = document.createElement('div');
-selectionOutline.className = 'reader-selection-outline';
-selectionOutline.hidden = true;
-document.body.append(selectionOutline);
+const selectionOutlineElements = [];
 
 let dragStart = null;
 let isDragging = false;
 let suppressNextClick = false;
 let selectedWords = [];
 
+function clearOutlines() {
+  for (const element of selectionOutlineElements.splice(0)) element.remove();
+}
+
 function clearSelection() {
   selectedWords = [];
-  selectionOutline.hidden = true;
+  clearOutlines();
   selectionToolbar.hidden = true;
 }
 
 function updateSelectionOutline() {
-  if (!selectedWords.length) {
-    selectionOutline.hidden = true;
-    return;
-  }
-  const bounds = selectedWords.reduce((result, word) => {
+  clearOutlines();
+  if (!selectedWords.length) return;
+
+  // Words are selected in reading order, so the outline follows the visual lines
+  // instead of covering the empty space of a single large rectangle.
+  const lines = [];
+  for (const word of selectedWords) {
     const rect = word.getBoundingClientRect();
-    return {
-      left: Math.min(result.left, rect.left),
-      right: Math.max(result.right, rect.right),
-      top: Math.min(result.top, rect.top),
-      bottom: Math.max(result.bottom, rect.bottom),
-    };
-  }, { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity });
-  selectionOutline.style.left = `${bounds.left - 4}px`;
-  selectionOutline.style.top = `${bounds.top - 3}px`;
-  selectionOutline.style.width = `${bounds.right - bounds.left + 8}px`;
-  selectionOutline.style.height = `${bounds.bottom - bounds.top + 6}px`;
-  selectionOutline.hidden = false;
+    const center = (rect.top + rect.bottom) / 2;
+    const line = lines.find((item) => Math.abs(item.center - center) <= Math.max(4, rect.height * 0.4));
+    if (!line) {
+      lines.push({ center, left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom });
+      continue;
+    }
+    line.left = Math.min(line.left, rect.left);
+    line.right = Math.max(line.right, rect.right);
+    line.top = Math.min(line.top, rect.top);
+    line.bottom = Math.max(line.bottom, rect.bottom);
+  }
+
+  for (const line of lines) {
+    const element = document.createElement('div');
+    element.className = 'reader-selection-outline';
+    element.style.left = `${line.left - 4}px`;
+    element.style.top = `${line.top - 3}px`;
+    element.style.width = `${line.right - line.left + 8}px`;
+    element.style.height = `${line.bottom - line.top + 6}px`;
+    document.body.append(element);
+    selectionOutlineElements.push(element);
+  }
 }
 
-function updateSelectedWords(x) {
-  const left = Math.min(dragStart.x, x);
-  const right = Math.max(dragStart.x, x);
-  const startRect = dragStart.word.getBoundingClientRect();
-  const lineCenter = (startRect.top + startRect.bottom) / 2;
-  const lineTolerance = Math.max(4, startRect.height * 0.55);
-  const nextSelection = [...readerContent.querySelectorAll('.reader-word')].filter((word) => {
-    const rect = word.getBoundingClientRect();
-    const wordLineCenter = (rect.top + rect.bottom) / 2;
-    return Math.abs(wordLineCenter - lineCenter) <= lineTolerance && rect.right >= left && rect.left <= right;
-  });
+function updateSelectedWords(x, y) {
+  const words = [...readerContent.querySelectorAll('.reader-word')];
+  const startIndex = words.indexOf(dragStart.word);
+  if (startIndex < 0) return;
+
+  const endIndex = closestBoxIndex(x, y, words.map((word) => word.getBoundingClientRect()));
+  const from = Math.min(startIndex, endIndex);
+  const to = Math.max(startIndex, endIndex);
+  const nextSelection = words.slice(from, to + 1);
+  const unchanged = nextSelection.length === selectedWords.length
+    && nextSelection[0] === selectedWords[0]
+    && nextSelection.at(-1) === selectedWords.at(-1);
+  if (unchanged) return;
+
   selectedWords = nextSelection;
   joinSelectedWords.disabled = selectedWords.length < 2 || !selectionIsContiguous();
   joinSelectedWords.textContent = 'Unir';
@@ -159,7 +176,7 @@ export function initializeWordSelection() {
       readerContent.classList.add('is-word-dragging');
       state.actions.closeWordPopover?.();
     }
-    updateSelectedWords(event.clientX);
+    updateSelectedWords(event.clientX, event.clientY);
   });
 
   document.addEventListener('pointerup', () => {
@@ -195,6 +212,7 @@ export function initializeWordSelection() {
   });
 
   window.addEventListener('resize', () => {
+    if (selectedWords.length) updateSelectionOutline();
     if (!selectionToolbar.hidden) showSelectionToolbar();
   });
 
@@ -234,7 +252,7 @@ export function initializeWordSelection() {
       cacheLibraryWordKeys(text.id, processedContent);
 
       selectedWords = [];
-      selectionOutline.hidden = true;
+      clearOutlines();
       selectionCount.textContent = result.created
         ? 'União aplicada e salva para próximas importações'
         : 'União aplicada; regra já estava salva';

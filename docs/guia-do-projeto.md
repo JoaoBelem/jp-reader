@@ -70,7 +70,7 @@ O app guarda os textos tokenizados depois da primeira análise. Ao abrir um text
 | `docs/code-structure.md` | Mapa curto dos módulos; este guia contém o detalhamento por funcionalidade. |
 | `public/fonts/*.ttf` | Arquivos de fonte japonesa usados pelas opções locais do leitor. |
 | `dict/` | Dicionários compatíveis com Yomitan, como o Jitendex em ZIP. |
-| `yomitan-master/` | Código do Yomitan reutilizado para transformar formas japonesas de busca; preserve também a licença GPL-3.0-or-later. |
+| `src/yomitan/` | Módulos do Yomitan copiados para transformar formas japonesas de busca; nenhuma pasta externa é necessária. |
 | `library/.parsed/` | Versões tokenizadas salvas dos textos importados. |
 | `.cache/` | Índice local SQLite usado para acelerar as consultas ao dicionário. |
 | `.venv/` | Ambiente Python local com as dependências instaladas. |

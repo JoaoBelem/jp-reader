@@ -20,7 +20,7 @@ def apply_custom_merges(tokens: list[dict], rules: list[list[str]] | None = None
             and len(rule) >= 2
             and all(isinstance(part, str) and part for part in rule)
         ),
-        key=lambda rule: len(rule["parts"]),
+        key=len,
         reverse=True,
     )
     current_tokens = tokens
@@ -29,19 +29,19 @@ def apply_custom_merges(tokens: list[dict], rules: list[list[str]] | None = None
         index = 0
         changed = False
         while index < len(current_tokens):
-            matched_rule = None
+            matched_parts = None
             for parts in valid_rules:
                 if index + len(parts) > len(current_tokens):
                     continue
                 if [token["surface"] for token in current_tokens[index:index + len(parts)]] == parts:
-                    matched_rule = rule
+                    matched_parts = parts
                     break
-            if matched_rule is None:
+            if matched_parts is None:
                 merged_tokens.append(current_tokens[index])
                 index += 1
                 continue
 
-            parts = matched_rule
+            parts = matched_parts
             group = current_tokens[index:index + len(parts)]
             merged_token = merge_group(group)
             merged_token["dictionaryForm"] = "".join(parts)

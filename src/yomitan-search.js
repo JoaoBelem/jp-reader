@@ -1,5 +1,5 @@
-import { LanguageTransformer } from '../yomitan-master/ext/js/language/language-transformer.js';
-import { japaneseTransforms } from '../yomitan-master/ext/js/language/ja/japanese-transforms.js';
+import { LanguageTransformer } from './yomitan/js/language/language-transformer.js';
+import { japaneseTransforms } from './yomitan/js/language/ja/japanese-transforms.js';
 
 const transformer = new LanguageTransformer();
 transformer.addDescriptor(japaneseTransforms);

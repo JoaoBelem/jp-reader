@@ -811,6 +811,9 @@ h1 {
   font-size: var(--reader-text-size, 24px);
   line-height: var(--reader-line-height);
   overflow-wrap: anywhere;
+  /* O HTML tokenizado guarda as quebras de linha do texto original; sem isto o
+     navegador as colapsa em espaço e os parágrafos ficam emendados. */
+  white-space: pre-wrap;
 }
 
 #reader-content.is-justified {

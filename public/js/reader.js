@@ -1,5 +1,5 @@
 import { cacheLibraryWordKeys, refreshLibrary } from './library.js';
-import { isNumberOnly } from './helpers.js';
+import { isNumberOnly, normalizeLineBreaks } from './helpers.js';
 import { state } from './state.js';
 import { setPage } from './settings.js';
 import { closeWordPopover, createCachedWordToken, hydrateCachedWords } from './dictionary-search.js';
@@ -62,7 +62,7 @@ function renderTokens(tokens) {
 async function buildReader(file, providedText, target = readerContent) {
   const rawText = providedText ?? await file.text();
   target.replaceChildren();
-  const [result] = await tokenizeTexts([rawText]);
+  const [result] = await tokenizeTexts([normalizeLineBreaks(rawText)]);
   const rendered = renderTokens(result.tokens);
   target.append(rendered.fragment);
 
@@ -118,7 +118,7 @@ function getEditedDocumentPayload() {
   }
 
   const punctuation = new Set([...'、。，．！？!?「」『』（）()[]［］【】…‥・：；:']);
-  const characters = [...readerTextEditor.value];
+  const characters = [...normalizeLineBreaks(readerTextEditor.value)];
   const fragment = document.createDocumentFragment();
   let index = 0;
   while (index < characters.length) {
@@ -236,10 +236,12 @@ async function loadDocument(record) {
     };
 
     if (typeof textResult.processedContent?.html === 'string') {
+      const html = normalizeLineBreaks(textResult.processedContent.html);
       readerTitle.textContent = textResult.processedContent.title || textResult.name;
-      readerContent.innerHTML = textResult.processedContent.html;
+      readerContent.innerHTML = html;
+      state.currentDocument.processedContent = { ...textResult.processedContent, html };
       hydrateCachedWords(readerContent);
-      cacheLibraryWordKeys(record.id, textResult.processedContent.html);
+      cacheLibraryWordKeys(record.id, html);
     } else {
       progressText.textContent = 'Analisando e separando as palavras…';
       const parsed = await buildReader({ name: textResult.name }, textResult.content);
